@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Historial de Cargas — Everwood FAQ Cloud</title>
+  <meta name="description" content="Consulta el historial de archivos de conversaciones cargados en la plataforma Everwood FAQ Cloud." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .preview-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .preview-modal-overlay.open { display: flex; }
+    .preview-modal {
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      max-width: 700px;
+      width: 100%;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    }
+    .preview-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--clr-border);
+    }
+    .preview-modal-header h2 { font-size: 0.95rem; font-weight: 700; }
+    .preview-modal-body {
+      overflow-y: auto;
+      padding: 1.25rem 1.5rem;
+      flex: 1;
+    }
+    .preview-modal-body pre {
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      color: var(--clr-text);
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.6;
+      background: var(--clr-surface2);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+    }
+    .preview-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--clr-border);
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <div class="brand-icon">🌲</div>
+      <span>Everwood <em>FAQ Cloud</em></span>
+    </a>
+    <nav class="navbar-nav">
+      <a href="index.html"   class="nav-link"         id="nav-home">Inicio</a>
+      <a href="upload.html"  class="nav-link"          id="nav-upload">Cargar</a>
+      <a href="history.html" class="nav-link active"   id="nav-history">Historial</a>
+    </nav>
+  </nav>
+
+  <!-- Page header -->
+  <header class="page-header">
+    <h1>Historial de cargas</h1>
+    <p>Todos los archivos de conversaciones registrados en Firestore, con sus metadatos y estado actual.</p>
+  </header>
+
+  <!-- Main content -->
+  <main class="main-content">
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Total archivos</span>
+        <span class="stat-value blue"  id="statTotal">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Cargados OK</span>
+        <span class="stat-value green" id="statOk">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Con error</span>
+        <span class="stat-value red"   id="statError">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Espacio total</span>
+        <span class="stat-value warn"  id="statSize">—</span>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="flex items-center justify-between mt-2 mb-2">
+      <span class="text-sm text-muted" id="tableCount">Cargando registros…</span>
+      <a href="upload.html" class="btn btn-primary" style="padding:0.5rem 1.1rem;font-size:0.85rem;">
+        + Nueva carga
+      </a>
+    </div>
+
+    <!-- Alert Firestore error -->
+    <div class="alert alert-danger" id="alertFirestore" role="alert">
+      <span class="alert-icon">❌</span>
+      <span id="alertFirestoreMsg">Error al conectar con Firestore.</span>
+    </div>
+
+    <!-- Table card -->
+    <div class="card">
+      <div class="table-wrap">
+        <table id="uploadsTable" aria-label="Historial de archivos cargados">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Archivo</th>
+              <th>Tipo</th>
+              <th>Tamaño</th>
+              <th>Responsable</th>
+              <th>Fecha de carga</th>
+              <th>Estado</th>
+              <th>Observaciones</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="uploadsBody"></tbody>
+        </table>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyState" style="display:none;">
+          <div class="empty-state-icon">📭</div>
+          <h3>Sin archivos cargados aún</h3>
+          <p>Cuando subas tu primer archivo aparecerá aquí con todos sus metadatos.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal de vista previa -->
+<div class="preview-modal-overlay" id="previewOverlay">
+  <div class="preview-modal">
+    <div class="preview-modal-header">
+      <h2 id="previewTitle">Vista previa</h2>
+      <button class="btn btn-ghost" id="previewClose" style="padding:0.3rem 0.7rem;">✕</button>
+    </div>
+    <div class="preview-modal-body">
+      <pre id="previewContent"></pre>
+    </div>
+    <div class="preview-modal-footer">
+      <button class="btn btn-accent" id="previewDownload">⬇ Descargar archivo</button>
+      <button class="btn btn-ghost"  id="previewCloseBtn">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK (solo Firestore) -->
+<script type="module">
+  import { initializeApp }                                      from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+  import { getFirestore, collection, getDocs, orderBy, query }  from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+  import { FIREBASE_CONFIG } from "./js/firebase-config.js";
+
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db  = getFirestore(app);
+
+  // ── DOM refs ───────────────────────────────────────────────
+  const uploadsBody    = document.getElementById("uploadsBody");
+  const emptyState     = document.getElementById("emptyState");
+  const tableCount     = document.getElementById("tableCount");
+  const alertFirestore = document.getElementById("alertFirestore");
+  const statTotal      = document.getElementById("statTotal");
+  const statOk         = document.getElementById("statOk");
+  const statError      = document.getElementById("statError");
+  const statSize       = document.getElementById("statSize");
+
+  // Modal
+  const previewOverlay  = document.getElementById("previewOverlay");
+  const previewTitle    = document.getElementById("previewTitle");
+  const previewContent  = document.getElementById("previewContent");
+  const previewDownload = document.getElementById("previewDownload");
+  const previewClose    = document.getElementById("previewClose");
+  const previewCloseBtn = document.getElementById("previewCloseBtn");
+
+  let _currentDoc = null; // documento activo en el modal
+
+  function closeModal() { previewOverlay.classList.remove("open"); _currentDoc = null; }
+  previewClose.addEventListener("click",    closeModal);
+  previewCloseBtn.addEventListener("click", closeModal);
+  previewOverlay.addEventListener("click",  e => { if (e.target === previewOverlay) closeModal(); });
+
+  // ── Helpers ────────────────────────────────────────────────
+  function formatDate(ts) {
+    if (!ts) return "—";
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleString("es-CO", {
+      year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit"
+    });
+  }
+
+  function statusBadge(s) {
+    const map = {
+      uploaded:   ["badge-success", "Cargado"],
+      processing: ["badge-warn",    "Procesando"],
+      processed:  ["badge-info",    "Procesado"],
+      error:      ["badge-danger",  "Error"],
+    };
+    const [cls, lbl] = map[s] || ["badge-neutral", s || "—"];
+    return `<span class="badge ${cls}">${lbl}</span>`;
+  }
+
+  function typeBadge(ext) {
+    return `<span class="format-badge">${ext || "—"}</span>`;
+  }
+
+  // ── Descargar el archivo desde Firestore ───────────────────
+  function downloadFromFirestore(doc) {
+    const content  = doc.fileContent || doc.preview || "";
+    const ext      = (doc.fileExt || "txt").toLowerCase();
+    const mimeMap  = { csv: "text/csv", json: "application/json", txt: "text/plain" };
+    const mime     = mimeMap[ext] || "text/plain";
+    const blob     = new Blob([content], { type: mime });
+    const url      = URL.createObjectURL(blob);
+    const a        = document.createElement("a");
+    a.href         = url;
+    a.download     = doc.fileName || `conversacion.${ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Cargar datos desde Firestore ───────────────────────────
+  async function loadUploads() {
+    try {
+      const q    = query(collection(db, "uploads"), orderBy("uploadDate", "desc"));
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        emptyState.style.display = "block";
+        tableCount.textContent   = "0 registros";
+        ["statTotal","statOk","statError"].forEach(id => document.getElementById(id).textContent = "0");
+        statSize.textContent = "0 B";
+        return;
+      }
+
+      let ok = 0, err = 0, totalB = 0;
+      const rows = [];
+      let rowNum = snap.size;
+
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        if (d.status === "uploaded" || d.status === "processed") ok++;
+        if (d.status === "error") err++;
+        totalB += d.fileSize || 0;
+
+        // Escapar nombre de archivo para atributo
+        const safeName = (d.fileName || "archivo").replace(/"/g, "&quot;");
+
+        rows.push(`
+          <tr>
+            <td class="td-muted td-mono">${rowNum--}</td>
+            <td>
+              <span class="truncate font-bold" title="${safeName}">${d.fileName || "—"}</span>
+            </td>
+            <td>${typeBadge(d.fileExt)}</td>
+            <td class="td-muted">${d.fileSizeFmt || "—"}</td>
+            <td>${d.responsible || "—"}</td>
+            <td class="td-muted td-mono" style="font-size:0.78rem;">${formatDate(d.uploadDate)}</td>
+            <td>${statusBadge(d.status)}</td>
+            <td class="td-muted" style="max-width:160px;font-size:0.78rem;">${d.observations || "—"}</td>
+            <td>
+              <div class="flex gap-2">
+                <button
+                  class="btn btn-ghost"
+                  style="padding:0.3rem 0.7rem;font-size:0.75rem;"
+                  data-doc-id="${docSnap.id}"
+                  onclick="window.__openPreview('${docSnap.id}')">
+                  👁 Ver
+                </button>
+                <button
+                  class="btn btn-accent"
+                  style="padding:0.3rem 0.7rem;font-size:0.75rem;"
+                  onclick="window.__downloadDoc('${docSnap.id}')">
+                  ⬇
+                </button>
+              </div>
+            </td>
+          </tr>
+        `);
+      });
+
+      uploadsBody.innerHTML = rows.join("");
+
+      // Guardar docs en window para acceso desde botones onclick
+      const docsMap = {};
+      snap.forEach(d => { docsMap[d.id] = d.data(); });
+      window.__docsMap = docsMap;
+
+      window.__openPreview = (id) => {
+        const d = window.__docsMap[id];
+        if (!d) return;
+        _currentDoc = d;
+        previewTitle.textContent  = d.fileName || "Vista previa";
+        previewContent.textContent = d.fileContent || d.preview || "(Sin contenido guardado)";
+        previewOverlay.classList.add("open");
+      };
+
+      window.__downloadDoc = (id) => {
+        const d = window.__docsMap[id];
+        if (d) downloadFromFirestore(d);
+      };
+
+      previewDownload.onclick = () => {
+        if (_currentDoc) downloadFromFirestore(_currentDoc);
+      };
+
+      // Formatear tamaño total
+      const sizeFmt = totalB >= 1048576
+        ? (totalB / 1048576).toFixed(1) + " MB"
+        : (totalB / 1024).toFixed(1)    + " KB";
+
+      statTotal.textContent = snap.size;
+      statOk.textContent    = ok;
+      statError.textContent = err;
+      statSize.textContent  = sizeFmt;
+      tableCount.textContent = `${snap.size} registro${snap.size !== 1 ? "s" : ""}`;
+
+    } catch (e) {
+      console.error(e);
+      document.getElementById("alertFirestoreMsg").textContent =
+        `No se pudo conectar a Firestore: ${e.message}`;
+      alertFirestore.classList.add("show");
+      tableCount.textContent = "Error al cargar";
+    }
+  }
+
+  loadUploads();
+</script>
+
+</body>
+</html>

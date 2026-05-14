@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cargar Conversaciones — Everwood FAQ Cloud</title>
+  <meta name="description" content="Carga archivos CSV, JSON o TXT con conversaciones históricas de Everwood y guárdalos en la nube." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <div class="brand-icon">🌲</div>
+      <span>Everwood <em>FAQ Cloud</em></span>
+    </a>
+    <nav class="navbar-nav">
+      <a href="index.html"   class="nav-link"         id="nav-home">Inicio</a>
+      <a href="upload.html"  class="nav-link active"   id="nav-upload">Cargar</a>
+      <a href="history.html" class="nav-link"          id="nav-history">Historial</a>
+    </nav>
+  </nav>
+
+  <!-- Page header -->
+  <header class="page-header">
+    <h1>Cargar archivo de conversaciones</h1>
+    <p>Selecciona o arrastra un archivo CSV, JSON o TXT. El contenido se almacena directamente en Firestore (plan gratuito).</p>
+  </header>
+
+  <!-- Main content -->
+  <main class="main-content">
+
+    <!-- Info banner: almacenamiento gratuito -->
+    <div class="alert alert-info show" style="margin-bottom:1.25rem;">
+      <span class="alert-icon">ℹ️</span>
+      <span>El archivo se guarda en <strong>Firestore</strong> (plan Spark gratuito). No se requiere Firebase Storage.</span>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+
+        <form id="uploadForm" novalidate>
+
+          <!-- ① Dropzone -->
+          <div class="form-group">
+            <label class="form-label">Archivo de conversaciones *</label>
+            <div class="dropzone" id="dropzone">
+              <input type="file" id="fileInput" accept=".csv,.json,.txt"
+                     aria-label="Seleccionar archivo CSV, JSON o TXT" />
+              <span class="dropzone-icon" id="dropzoneIcon">📁</span>
+              <p class="dropzone-title">Arrastra tu archivo aquí o haz clic para buscar</p>
+              <p class="dropzone-sub">Solo se aceptan CSV, JSON y TXT · Máx. 500 KB</p>
+              <div class="dropzone-formats">
+                <span class="format-badge">CSV</span>
+                <span class="format-badge">JSON</span>
+                <span class="format-badge">TXT</span>
+              </div>
+            </div>
+
+            <!-- File selected info -->
+            <div class="file-selected-info" id="fileInfo">
+              <span>📄</span>
+              <div>
+                <strong id="fileInfoName">—</strong>
+                <span class="td-muted" id="fileInfoSize"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ② Responsible -->
+          <div class="form-group">
+            <label class="form-label" for="responsible">Responsable / Grupo *</label>
+            <input
+              type="text"
+              id="responsible"
+              class="form-control"
+              placeholder="Ej: Grupo A, Equipo Soporte, Ana Gómez"
+              maxlength="80"
+              required
+            />
+          </div>
+
+          <!-- ③ Observations -->
+          <div class="form-group">
+            <label class="form-label" for="observations">Observaciones</label>
+            <textarea
+              id="observations"
+              class="form-control"
+              placeholder="Contexto del archivo, canal de origen, período cubierto…"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <!-- ④ Alerts -->
+          <div class="alert alert-danger" id="alertError" role="alert">
+            <span class="alert-icon">❌</span>
+            <span id="alertErrorMsg">Error al cargar el archivo.</span>
+          </div>
+
+          <div class="alert alert-warn" id="alertWarn" role="alert">
+            <span class="alert-icon">⚠️</span>
+            <span id="alertWarnMsg">Advertencia.</span>
+          </div>
+
+          <div class="alert alert-success" id="alertSuccess" role="alert">
+            <span class="alert-icon">✅</span>
+            <span id="alertSuccessMsg">Archivo cargado exitosamente.</span>
+          </div>
+
+          <!-- ⑤ Progress -->
+          <div class="progress-wrap" id="progressWrap">
+            <div class="progress-label">
+              <span>Guardando en Firestore…</span>
+              <span id="progressPct">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="progressFill"></div>
+            </div>
+          </div>
+
+          <!-- ⑥ Submit -->
+          <div class="flex gap-3 mt-4">
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+              ☁️ Subir a la nube
+            </button>
+            <button type="button" class="btn btn-ghost" id="resetBtn">
+              Limpiar
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+
+    <!-- Quick link -->
+    <div class="flex items-center justify-between mt-3" style="padding:0 0.25rem;">
+      <span class="text-sm text-muted">¿Ya cargaste archivos?</span>
+      <a href="history.html" class="btn btn-ghost" style="padding:0.4rem 1rem;font-size:0.82rem;">
+        Ver historial →
+      </a>
+    </div>
+
+  </main>
+</div>
+
+<!-- Firebase SDK vía CDN (solo Firestore — plan gratuito Spark) -->
+<script type="module">
+  import { initializeApp }                                  from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp }
+                                                            from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+  import { FIREBASE_CONFIG } from "./js/firebase-config.js";
+
+  // ── Init ─────────────────────────────────────────────────
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db  = getFirestore(app);
+
+  // ── DOM refs ──────────────────────────────────────────────
+  const form         = document.getElementById("uploadForm");
+  const fileInput    = document.getElementById("fileInput");
+  const dropzone     = document.getElementById("dropzone");
+  const dropzoneIcon = document.getElementById("dropzoneIcon");
+  const fileInfo     = document.getElementById("fileInfo");
+  const fileInfoName = document.getElementById("fileInfoName");
+  const fileInfoSize = document.getElementById("fileInfoSize");
+  const responsible  = document.getElementById("responsible");
+  const observations = document.getElementById("observations");
+  const submitBtn    = document.getElementById("submitBtn");
+  const resetBtn     = document.getElementById("resetBtn");
+  const progressWrap = document.getElementById("progressWrap");
+  const progressFill = document.getElementById("progressFill");
+  const progressPct  = document.getElementById("progressPct");
+
+  // ── Alert helpers ─────────────────────────────────────────
+  const alertError   = document.getElementById("alertError");
+  const alertWarn    = document.getElementById("alertWarn");
+  const alertSuccess = document.getElementById("alertSuccess");
+
+  function hideAlerts() {
+    [alertError, alertWarn, alertSuccess].forEach(a => a.classList.remove("show"));
+  }
+  function showError(msg) {
+    hideAlerts();
+    document.getElementById("alertErrorMsg").textContent = msg;
+    alertError.classList.add("show");
+  }
+  function showWarn(msg) {
+    hideAlerts();
+    document.getElementById("alertWarnMsg").textContent = msg;
+    alertWarn.classList.add("show");
+  }
+  function showSuccess(msg) {
+    hideAlerts();
+    document.getElementById("alertSuccessMsg").textContent = msg;
+    alertSuccess.classList.add("show");
+  }
+
+  // ── Constantes ────────────────────────────────────────────
+  const ALLOWED_EXTS   = ["csv", "json", "txt"];
+  const MAX_SIZE_BYTES = 500 * 1024; // 500 KB (límite Firestore por documento ≈ 1 MB)
+
+  function formatBytes(b) {
+    if (b < 1024)    return b + " B";
+    if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
+    return (b / 1048576).toFixed(2) + " MB";
+  }
+
+  function getExt(name) {
+    return name.split(".").pop().toLowerCase();
+  }
+
+  // ── Validación del archivo ────────────────────────────────
+  function validateFile(file) {
+    const ext = getExt(file.name);
+    if (!ALLOWED_EXTS.includes(ext)) {
+      return `Formato no permitido (.${ext}). Solo se aceptan CSV, JSON y TXT.`;
+    }
+    if (file.size > MAX_SIZE_BYTES) {
+      return `El archivo supera el límite de 500 KB (${formatBytes(file.size)}). Usa un fragmento más pequeño.`;
+    }
+    return null;
+  }
+
+  // ── Mostrar info del archivo seleccionado ─────────────────
+  function displayFileInfo(file) {
+    fileInfoName.textContent = file.name;
+    fileInfoSize.textContent = ` · ${formatBytes(file.size)}`;
+    fileInfo.style.display   = "flex";
+    dropzoneIcon.textContent = "✅";
+  }
+
+  // ── Drag & drop ───────────────────────────────────────────
+  dropzone.addEventListener("dragover",  e => { e.preventDefault(); dropzone.classList.add("drag-over"); });
+  dropzone.addEventListener("dragleave", ()  => dropzone.classList.remove("drag-over"));
+  dropzone.addEventListener("drop", e => {
+    e.preventDefault();
+    dropzone.classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    fileInput.files = e.dataTransfer.files;
+    handleFileChange(file);
+  });
+
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files[0]) handleFileChange(fileInput.files[0]);
+  });
+
+  function handleFileChange(file) {
+    hideAlerts();
+    const err = validateFile(file);
+    if (err) {
+      showError(err);
+      fileInfo.style.display = "none";
+      fileInput.value = "";
+      dropzoneIcon.textContent = "📁";
+    } else {
+      displayFileInfo(file);
+    }
+  }
+
+  // ── Reset ─────────────────────────────────────────────────
+  resetBtn.addEventListener("click", () => {
+    form.reset();
+    fileInfo.style.display = "none";
+    fileInfoName.textContent = "—";
+    dropzoneIcon.textContent = "📁";
+    progressWrap.classList.remove("show");
+    progressFill.style.width = "0%";
+    hideAlerts();
+  });
+
+  // ── Leer archivo como texto ───────────────────────────────
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = e => resolve(e.target.result);
+      reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
+      reader.readAsText(file, "UTF-8");
+    });
+  }
+
+  // ── Simula progreso visual ────────────────────────────────
+  function animateProgress(from, to, durationMs) {
+    return new Promise(resolve => {
+      const steps = 20;
+      const step  = (to - from) / steps;
+      let cur     = from;
+      const iv = setInterval(() => {
+        cur += step;
+        if (cur >= to) { cur = to; clearInterval(iv); resolve(); }
+        progressFill.style.width = cur + "%";
+        progressPct.textContent  = Math.round(cur) + "%";
+      }, durationMs / steps);
+    });
+  }
+
+  // ── Enviar formulario ─────────────────────────────────────
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    hideAlerts();
+
+    // 1. Validar que se seleccionó archivo
+    const file = fileInput.files[0];
+    if (!file) {
+      showWarn("No se seleccionó ningún archivo. Por favor elige un CSV, JSON o TXT.");
+      return;
+    }
+
+    // 2. Validar formato y tamaño
+    const formatErr = validateFile(file);
+    if (formatErr) { showError(formatErr); return; }
+
+    // 3. Validar responsable
+    const resp = responsible.value.trim();
+    if (!resp) {
+      showWarn("El campo 'Responsable / Grupo' es obligatorio.");
+      responsible.focus();
+      return;
+    }
+
+    // 4. Iniciar UI de progreso
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="spinner"></span> Procesando…`;
+    progressWrap.classList.add("show");
+    await animateProgress(0, 30, 400);
+
+    try {
+      // 5. Leer contenido del archivo
+      const fileContent = await readFileAsText(file);
+      await animateProgress(30, 65, 300);
+
+      // 6. Extraer vista previa (primeras 5 líneas / primeros 500 chars)
+      const preview = fileContent.length > 500
+        ? fileContent.substring(0, 500) + "\n[…]"
+        : fileContent;
+
+      const ext = getExt(file.name);
+
+      // 7. Guardar en Firestore (todo en texto — sin Firebase Storage)
+      await addDoc(collection(db, "uploads"), {
+        fileName:     file.name,
+        uploadDate:   serverTimestamp(),
+        fileType:     file.type || `text/${ext}`,
+        fileExt:      ext.toUpperCase(),
+        fileSize:     file.size,
+        fileSizeFmt:  formatBytes(file.size),
+        responsible:  resp,
+        observations: observations.value.trim() || "—",
+        status:       "uploaded",
+        preview:      preview,         // vista previa del contenido
+        fileContent:  fileContent,     // contenido completo para descarga
+        storageType:  "firestore",     // indica que NO usa Storage
+      });
+
+      await animateProgress(65, 100, 400);
+
+      // 8. Éxito
+      showSuccess(`"${file.name}" se guardó correctamente en Firestore ✔`);
+
+      // Limpiar después de 2.5 s
+      setTimeout(() => {
+        form.reset();
+        fileInfo.style.display = "none";
+        dropzoneIcon.textContent = "📁";
+        progressWrap.classList.remove("show");
+        progressFill.style.width = "0%";
+      }, 2500);
+
+    } catch (err) {
+      console.error(err);
+      showError(`Error al guardar en Firestore: ${err.message}`);
+      progressWrap.classList.remove("show");
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = "☁️ Subir a la nube";
+  });
+</script>
+
+</body>
+</html>

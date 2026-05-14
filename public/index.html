@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Everwood FAQ Cloud — Plataforma de Gestión de Conversaciones</title>
+  <meta name="description" content="Plataforma cloud de Everwood para cargar, almacenar y analizar conversaciones históricas, y generar sugerencias de FAQs automáticamente." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <div class="brand-icon">🌲</div>
+      <span>Everwood <em>FAQ Cloud</em></span>
+    </a>
+    <nav class="navbar-nav">
+      <a href="index.html"   class="nav-link active" id="nav-home">Inicio</a>
+      <a href="upload.html"  class="nav-link"        id="nav-upload">Cargar</a>
+      <a href="history.html" class="nav-link"        id="nav-history">Historial</a>
+    </nav>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+
+      <span class="hero-badge">🚀 Plataforma Cloud en Producción</span>
+
+      <h1>
+        Gestión inteligente de<br />
+        <span class="gradient-text">conversaciones Everwood</span>
+      </h1>
+
+      <p>
+        Carga archivos de conversaciones históricas de WhatsApp y otros canales,
+        almacénalos de forma segura en la nube y accede a métricas, historial
+        y sugerencias de FAQs desde un solo lugar.
+      </p>
+
+      <div class="hero-actions">
+        <a href="upload.html" class="btn btn-primary" id="cta-upload">
+          ☁️ Cargar Conversaciones
+        </a>
+        <a href="history.html" class="btn btn-ghost" id="cta-history">
+          📋 Ver Historial
+        </a>
+      </div>
+
+      <!-- Feature cards -->
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feature-icon">📂</span>
+          <h3>Carga de archivos</h3>
+          <p>Soporta CSV, JSON y TXT. Validación automática de formato y peso antes de subir.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">☁️</span>
+          <h3>Almacenamiento cloud</h3>
+          <p>Archivos guardados en Firebase Storage con URL de descarga segura y permanente.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🗄️</span>
+          <h3>Registro de metadatos</h3>
+          <p>Cada carga registra nombre, fecha, tipo, tamaño, responsable, estado y observaciones.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">📊</span>
+          <h3>Historial completo</h3>
+          <p>Consulta todos los archivos cargados con sus estados y accede a los archivos originales.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
