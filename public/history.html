@@ -73,9 +73,10 @@
       <span>Everwood <em>FAQ Cloud</em></span>
     </a>
     <nav class="navbar-nav">
-      <a href="index.html"   class="nav-link"         id="nav-home">Inicio</a>
-      <a href="upload.html"  class="nav-link"          id="nav-upload">Cargar</a>
-      <a href="history.html" class="nav-link active"   id="nav-history">Historial</a>
+      <a href="index.html"   class="nav-link">Inicio</a>
+      <a href="upload.html"  class="nav-link">Cargar</a>
+      <a href="history.html" class="nav-link active">Historial</a>
+      <a href="faqs.html"    class="nav-link">FAQs</a>
     </nav>
   </nav>
 
@@ -286,10 +287,15 @@
             <td class="td-muted" style="max-width:160px;font-size:0.78rem;">${d.observations || "—"}</td>
             <td>
               <div class="flex gap-2">
+                <a
+                  href="detail.html?id=${docSnap.id}"
+                  class="btn btn-ghost"
+                  style="padding:0.3rem 0.7rem;font-size:0.75rem;">
+                  🔍 Detalle
+                </a>
                 <button
                   class="btn btn-ghost"
                   style="padding:0.3rem 0.7rem;font-size:0.75rem;"
-                  data-doc-id="${docSnap.id}"
                   onclick="window.__openPreview('${docSnap.id}')">
                   👁 Ver
                 </button>

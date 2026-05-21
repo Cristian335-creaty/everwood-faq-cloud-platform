@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalle de Carga — Everwood FAQ Cloud</title>
+  <meta name="description" content="Detalle completo de un archivo de conversaciones cargado en Everwood FAQ Cloud." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
+    .detail-field { display: flex; flex-direction: column; gap: 0.3rem; }
+    .detail-field .field-label {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--clr-muted);
+    }
+    .detail-field .field-value {
+      font-size: 0.92rem; color: var(--clr-text); font-weight: 500;
+    }
+    .preview-box {
+      background: var(--clr-surface2);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-sm);
+      padding: 1.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      color: var(--clr-text);
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.7;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .section-title {
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--clr-muted);
+      margin-bottom: 0.75rem; padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--clr-border);
+    }
+    .status-hero {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1rem 1.5rem;
+      background: var(--clr-surface2);
+      border-radius: var(--radius-md);
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--clr-border);
+    }
+    .status-hero-icon { font-size: 2.2rem; }
+    .status-hero h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .status-hero p  { font-size: 0.82rem; color: var(--clr-muted); }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <div class="brand-icon">🌲</div>
+      <span>Everwood <em>FAQ Cloud</em></span>
+    </a>
+    <nav class="navbar-nav">
+      <a href="index.html"   class="nav-link">Inicio</a>
+      <a href="upload.html"  class="nav-link">Cargar</a>
+      <a href="history.html" class="nav-link">Historial</a>
+      <a href="faqs.html"    class="nav-link">FAQs</a>
+    </nav>
+  </nav>
+
+  <header class="page-header">
+    <div class="flex items-center gap-3">
+      <a href="history.html" class="btn btn-ghost" style="padding:0.4rem 0.9rem;font-size:0.82rem;">← Volver</a>
+      <div>
+        <h1 id="pageTitle">Detalle de carga</h1>
+        <p>Información completa del archivo registrado en Firestore.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <!-- Loading -->
+    <div id="loadingState" class="empty-state">
+      <div class="empty-state-icon">⏳</div>
+      <h3>Cargando información…</h3>
+      <p>Consultando Firestore</p>
+    </div>
+
+    <!-- Error -->
+    <div class="alert alert-danger" id="alertError" style="display:none;">
+      <span class="alert-icon">❌</span>
+      <span id="alertErrorMsg">No se encontró el documento.</span>
+    </div>
+
+    <!-- Content (hidden until loaded) -->
+    <div id="detailContent" style="display:none;">
+
+      <!-- Status hero -->
+      <div class="status-hero">
+        <div class="status-hero-icon" id="statusIcon">📄</div>
+        <div>
+          <h2 id="heroFileName">—</h2>
+          <p id="heroMeta">—</p>
+        </div>
+        <div style="margin-left:auto;" id="heroBadge"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+
+          <!-- Metadata grid -->
+          <p class="section-title">Metadatos del archivo</p>
+          <div class="detail-grid">
+            <div class="detail-field">
+              <span class="field-label">Nombre del archivo</span>
+              <span class="field-value" id="dFileName">—</span>
+            </div>
+            <div class="detail-field">
+              <span class="field-label">Fecha de carga</span>
+              <span class="field-value" id="dUploadDate">—</span>
+            </div>
+            <div class="detail-field">
+              <span class="field-label">Tipo de archivo</span>
+              <span class="field-value" id="dFileType">—</span>
+            </div>
+            <div class="detail-field">
+              <span class="field-label">Tamaño</span>
+              <span class="field-value" id="dFileSize">—</span>
+            </div>
+            <div class="detail-field">
+              <span class="field-label">Responsable / Grupo</span>
+              <span class="field-value" id="dResponsible">—</span>
+            </div>
+            <div class="detail-field">
+              <span class="field-label">Estado</span>
+              <span class="field-value" id="dStatus">—</span>
+            </div>
+            <div class="detail-field" style="grid-column: 1 / -1;">
+              <span class="field-label">Observaciones</span>
+              <span class="field-value" id="dObservations">—</span>
+            </div>
+            <div class="detail-field">
+              <span class="field-label">Almacenamiento</span>
+              <span class="field-value" id="dStorageType">—</span>
+            </div>
+            <div class="detail-field">
+              <span class="field-label">ID del documento</span>
+              <span class="field-value td-mono" id="dDocId" style="font-size:0.78rem;color:var(--clr-muted);">—</span>
+            </div>
+          </div>
+
+          <!-- Preview -->
+          <p class="section-title mt-3">Vista previa del contenido</p>
+          <div class="preview-box" id="dPreview">Sin contenido disponible.</div>
+
+          <!-- Actions -->
+          <div class="flex gap-3 mt-4" style="flex-wrap:wrap;">
+            <button class="btn btn-accent" id="btnDownload">⬇ Descargar archivo</button>
+            <a href="faqs.html" class="btn btn-primary" id="btnFaqs">🤖 Generar FAQs</a>
+            <a href="history.html" class="btn btn-ghost">← Volver al historial</a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { initializeApp }                          from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+  import { getFirestore, doc, getDoc }              from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+  import { FIREBASE_CONFIG }                        from "./js/firebase-config.js";
+
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db  = getFirestore(app);
+
+  const params = new URLSearchParams(window.location.search);
+  const docId  = params.get("id");
+
+  function formatDate(ts) {
+    if (!ts) return "—";
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleString("es-CO", { year:"numeric",month:"long",day:"2-digit",hour:"2-digit",minute:"2-digit" });
+  }
+
+  function statusBadge(s) {
+    const map = {
+      uploaded:   ["badge-success","✅ Cargado"],
+      processing: ["badge-warn",   "⏳ Procesando"],
+      processed:  ["badge-info",   "✔ Procesado"],
+      error:      ["badge-danger", "❌ Error"],
+    };
+    const [cls, lbl] = map[s] || ["badge-neutral", s || "—"];
+    return `<span class="badge ${cls}" style="font-size:0.85rem;padding:0.3rem 0.9rem;">${lbl}</span>`;
+  }
+
+  function downloadDoc(d) {
+    const content = d.fileContent || d.preview || "";
+    const ext     = (d.fileExt || "txt").toLowerCase();
+    const mime    = { csv:"text/csv", json:"application/json", txt:"text/plain" }[ext] || "text/plain";
+    const blob    = new Blob([content], { type: mime });
+    const url     = URL.createObjectURL(blob);
+    const a       = document.createElement("a");
+    a.href = url; a.download = d.fileName || `archivo.${ext}`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function load() {
+    if (!docId) {
+      document.getElementById("loadingState").style.display = "none";
+      document.getElementById("alertErrorMsg").textContent = "No se especificó un ID de documento en la URL.";
+      document.getElementById("alertError").style.display = "flex";
+      return;
+    }
+
+    try {
+      const snap = await getDoc(doc(db, "uploads", docId));
+      document.getElementById("loadingState").style.display = "none";
+
+      if (!snap.exists()) {
+        document.getElementById("alertErrorMsg").textContent = `No existe un documento con ID: ${docId}`;
+        document.getElementById("alertError").style.display = "flex";
+        return;
+      }
+
+      const d = snap.data();
+      document.getElementById("detailContent").style.display = "block";
+      document.getElementById("pageTitle").textContent        = d.fileName || "Detalle de carga";
+      document.getElementById("heroFileName").textContent     = d.fileName || "—";
+      document.getElementById("heroMeta").textContent         = `${d.fileSizeFmt || "—"} · ${d.fileExt || "—"} · Cargado por ${d.responsible || "—"}`;
+      document.getElementById("heroBadge").innerHTML          = statusBadge(d.status);
+      document.getElementById("statusIcon").textContent       = d.status === "error" ? "❌" : "📄";
+
+      document.getElementById("dFileName").textContent    = d.fileName    || "—";
+      document.getElementById("dUploadDate").textContent  = formatDate(d.uploadDate);
+      document.getElementById("dFileType").innerHTML      = `<span class="format-badge">${d.fileExt || "—"}</span> <span style="color:var(--clr-muted);font-size:0.8rem;">${d.fileType || ""}</span>`;
+      document.getElementById("dFileSize").textContent    = d.fileSizeFmt || "—";
+      document.getElementById("dResponsible").textContent = d.responsible || "—";
+      document.getElementById("dStatus").innerHTML        = statusBadge(d.status);
+      document.getElementById("dObservations").textContent= d.observations|| "—";
+      document.getElementById("dStorageType").textContent = d.storageType === "firestore" ? "☁️ Firestore (plan gratuito)" : d.storageType || "—";
+      document.getElementById("dDocId").textContent       = snap.id;
+      document.getElementById("dPreview").textContent     = d.fileContent || d.preview || "Sin contenido almacenado.";
+
+      // Link FAQs con el docId
+      document.getElementById("btnFaqs").href = `faqs.html?id=${snap.id}`;
+
+      document.getElementById("btnDownload").addEventListener("click", () => downloadDoc(d));
+
+    } catch (e) {
+      document.getElementById("loadingState").style.display = "none";
+      document.getElementById("alertErrorMsg").textContent  = `Error al consultar Firestore: ${e.message}`;
+      document.getElementById("alertError").style.display   = "flex";
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

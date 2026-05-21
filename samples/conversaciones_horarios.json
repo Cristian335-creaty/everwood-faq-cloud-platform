@@ -1,0 +1,42 @@
+[
+  {
+    "timestamp": "2026-05-21T12:00:10Z",
+    "sender": "Cliente",
+    "message": "Hola, ¿cuál es el horario de atención para soporte telefónico?"
+  },
+  {
+    "timestamp": "2026-05-21T12:00:40Z",
+    "sender": "Everwood Bot",
+    "message": "Hola! Nuestro equipo de atención humana está disponible de lunes a viernes de 8:00 AM a 6:00 PM (hora de Colombia)."
+  },
+  {
+    "timestamp": "2026-05-21T12:01:15Z",
+    "sender": "Cliente",
+    "message": "Entendido. Si tengo una urgencia el fin de semana, ¿a qué hora cierran los canales virtuales?"
+  },
+  {
+    "timestamp": "2026-05-21T12:01:45Z",
+    "sender": "Everwood Bot",
+    "message": "Los canales virtuales de chat están disponibles las 24 horas. Para atención personalizada de guardia, puedes llamar en cualquier momento al número de soporte urgente."
+  },
+  {
+    "timestamp": "2026-05-21T12:03:00Z",
+    "sender": "Cliente",
+    "message": "Tengo otra duda, ¿cómo puedo cancelar mi suscripción? No veo el botón de cancelación en mi cuenta."
+  },
+  {
+    "timestamp": "2026-05-21T12:03:40Z",
+    "sender": "Everwood Bot",
+    "message": "Para tramitar la cancelación o baja, ve a Configuración de Cuenta -> Suscripción -> Anular plan. Si tienes derecho a un reembolso, procesaremos tu devolución en un plazo de 3 a 5 días hábiles."
+  },
+  {
+    "timestamp": "2026-05-21T12:04:10Z",
+    "sender": "Cliente",
+    "message": "Quiero hablar con un asesor real para tramitar la devolución ahora."
+  },
+  {
+    "timestamp": "2026-05-21T12:04:35Z",
+    "sender": "Everwood Bot",
+    "message": "Te comunicaré de inmediato con un asesor del departamento de reembolsos para gestionar tu caso personalmente."
+  }
+]

@@ -1,0 +1,9 @@
+fecha,emisor,mensaje
+"2026-05-21 11:00:15","Cliente","Hola, estoy interesado en el servicio de Everwood. ¿Cuáles son los precios?"
+"2026-05-21 11:00:50","Everwood Bot","Hola! Contamos con planes desde $10 USD mensuales. Puedes elegir el Plan Básico o el Plan Profesional."
+"2026-05-21 11:01:22","Cliente","¿Qué costo tiene el Plan Profesional?"
+"2026-05-21 11:01:45","Everwood Bot","El Plan Profesional tiene un costo mensual de $25 USD. Incluye soporte 24/7 y acceso ilimitado a las herramientas."
+"2026-05-21 11:02:10","Cliente","¿Ofrecen algún descuento por pago anual?"
+"2026-05-21 11:02:35","Everwood Bot","Sí! Si realizas un pago anual obtienes un descuento del 15% en cualquier tarifa."
+"2026-05-21 11:03:00","Cliente","Excelente tarifa, ¿cómo puedo realizar el pago?"
+"2026-05-21 11:03:20","Everwood Bot","Puedes pagar de forma segura con tarjeta de crédito, PayPal o transferencia bancaria en la sección de cobro de tu cuenta."

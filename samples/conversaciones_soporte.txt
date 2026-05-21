@@ -1,0 +1,8 @@
+[21/05/2026 10:15:30] Usuario: Hola, tengo problemas para ingresar a mi cuenta de Everwood. He olvidado mi contraseña y no recibo el correo para restablecerla. ¿Me pueden ayudar con el soporte?
+[21/05/2026 10:16:10] Everwood Bot: Hola. Lamento el inconveniente. Por favor verifica en tu bandeja de Spam. Si sigues sin recibirlo, puedo transferirte a un asesor humano de soporte técnico.
+[21/05/2026 10:17:05] Usuario: Ya revisé Spam y nada. Por favor pásame con soporte técnico.
+[21/05/2026 10:18:00] Everwood Bot: Entendido. Te estoy transfiriendo con un agente de soporte.
+[21/05/2026 10:18:30] Soporte Everwood (Carlos): Hola, buenas tardes. Para ayudarte a configurar tu cuenta y restablecer tu contraseña, por favor confírmame el correo electrónico con el que te registraste.
+[21/05/2026 10:19:15] Usuario: El correo es juan.perez@email.com.
+[21/05/2026 10:20:45] Soporte Everwood (Carlos): Gracias, Juan. Acabo de forzar el envío del correo de activación. ¿Podrías intentar iniciar sesión ahora con el enlace que te llegó?
+[21/05/2026 10:21:30] Usuario: Sí, ya me llegó. Muchas gracias por la ayuda técnica, excelente servicio.

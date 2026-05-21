@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sugerencias de FAQs — Everwood FAQ Cloud</title>
+  <meta name="description" content="Generación automática de preguntas frecuentes a partir de conversaciones históricas de Everwood." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .faq-card {
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      animation: fadeUp 0.3s ease both;
+    }
+    .faq-card:hover { border-color: rgba(79,142,247,0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .faq-card.approved  { border-left: 3px solid var(--clr-success); }
+    .faq-card.rejected  { border-left: 3px solid var(--clr-danger); opacity:0.55; }
+    .faq-card.edited    { border-left: 3px solid var(--clr-warn); }
+    .faq-card.pending   { border-left: 3px solid var(--clr-muted); }
+
+    .faq-question {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--clr-text);
+      line-height: 1.4;
+      border: none;
+      background: transparent;
+      width: 100%;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+    }
+    .faq-question:focus {
+      background: var(--clr-surface2);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.6rem;
+    }
+    .faq-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .category-chip {
+      background: rgba(79,142,247,0.12);
+      color: var(--clr-primary);
+      border: 1px solid rgba(79,142,247,0.2);
+      border-radius: 99px;
+      padding: 0.15rem 0.7rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .faq-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn-approve { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); border-radius: var(--radius-sm); padding:0.35rem 0.9rem; font-size:0.8rem; font-weight:700; transition: all var(--transition); }
+    .btn-approve:hover { background: rgba(34,197,94,0.3); }
+    .btn-reject  { background: rgba(239,68,68,0.12);  color: #f87171; border: 1px solid rgba(239,68,68,0.25);  border-radius: var(--radius-sm); padding:0.35rem 0.9rem; font-size:0.8rem; font-weight:700; transition: all var(--transition); }
+    .btn-reject:hover  { background: rgba(239,68,68,0.25); }
+    .btn-edit    { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); border-radius: var(--radius-sm); padding:0.35rem 0.9rem; font-size:0.8rem; font-weight:700; transition: all var(--transition); }
+    .btn-edit:hover    { background: rgba(245,158,11,0.25); }
+
+    .select-file {
+      background: var(--clr-surface2);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-sm);
+      color: var(--clr-text);
+      padding: 0.65rem 1rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      width: 100%;
+      transition: border-color var(--transition);
+    }
+    .select-file:focus { border-color: var(--clr-primary); }
+
+    .faq-grid { display: flex; flex-direction: column; gap: 0.85rem; margin-top: 1.5rem; }
+
+    .summary-bar {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      padding: 1rem 1.5rem;
+      background: var(--clr-surface2);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--clr-border);
+      margin-bottom: 1.5rem;
+      font-size: 0.82rem;
+    }
+    .summary-item { display:flex; align-items:center; gap:0.4rem; }
+    .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .dot-green { background: var(--clr-success); }
+    .dot-red   { background: var(--clr-danger); }
+    .dot-warn  { background: var(--clr-warn); }
+    .dot-gray  { background: var(--clr-muted); }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <div class="brand-icon">🌲</div>
+      <span>Everwood <em>FAQ Cloud</em></span>
+    </a>
+    <nav class="navbar-nav">
+      <a href="index.html"   class="nav-link">Inicio</a>
+      <a href="upload.html"  class="nav-link">Cargar</a>
+      <a href="history.html" class="nav-link">Historial</a>
+      <a href="faqs.html"    class="nav-link active">FAQs</a>
+    </nav>
+  </nav>
+
+  <header class="page-header">
+    <h1>Generador de FAQs</h1>
+    <p>Selecciona un archivo cargado para analizar sus conversaciones y generar sugerencias de preguntas frecuentes automáticamente.</p>
+  </header>
+
+  <main class="main-content">
+
+    <!-- Selector de archivo -->
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div class="card-body">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label class="form-label" for="fileSelect">Archivo de conversaciones a analizar</label>
+          <select class="select-file" id="fileSelect">
+            <option value="">— Cargando archivos disponibles… —</option>
+          </select>
+        </div>
+        <div class="flex gap-3" style="flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btnGenerate" disabled>
+            🤖 Generar FAQs
+          </button>
+          <button class="btn btn-ghost" id="btnSaveAll" style="display:none;">
+            💾 Guardar aprobadas en Firestore
+          </button>
+        </div>
+
+        <div class="alert alert-info" id="alertInfo" style="margin-top:1rem;">
+          <span class="alert-icon">🤖</span>
+          <span>El algoritmo analiza palabras clave en el texto y genera preguntas frecuentes por categoría. No requiere IA externa.</span>
+        </div>
+        <div class="alert alert-success" id="alertSaved" style="margin-top:0.75rem;">
+          <span class="alert-icon">✅</span>
+          <span id="alertSavedMsg">FAQs guardadas correctamente.</span>
+        </div>
+        <div class="alert alert-danger" id="alertErr" style="margin-top:0.75rem;">
+          <span class="alert-icon">❌</span>
+          <span id="alertErrMsg">Error.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary bar (oculta hasta generar) -->
+    <div class="summary-bar" id="summaryBar" style="display:none;">
+      <span class="summary-item"><span class="dot dot-gray"></span> Total: <strong id="sumTotal">0</strong></span>
+      <span class="summary-item"><span class="dot dot-green"></span> Aprobadas: <strong id="sumApproved">0</strong></span>
+      <span class="summary-item"><span class="dot dot-warn"></span>  Editadas: <strong id="sumEdited">0</strong></span>
+      <span class="summary-item"><span class="dot dot-red"></span>  Rechazadas: <strong id="sumRejected">0</strong></span>
+      <span class="summary-item"><span class="dot dot-gray"></span> Pendientes: <strong id="sumPending">0</strong></span>
+    </div>
+
+    <!-- FAQ list -->
+    <div class="faq-grid" id="faqGrid"></div>
+
+    <!-- Empty state -->
+    <div class="empty-state" id="emptyFaqs" style="display:none;">
+      <div class="empty-state-icon">🤖</div>
+      <h3>No se encontraron patrones</h3>
+      <p>El archivo puede estar vacío o no contener texto analizable. Intenta con otro archivo.</p>
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+  import { getFirestore, collection, getDocs, addDoc, serverTimestamp, orderBy, query }
+    from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+  import { FIREBASE_CONFIG } from "./js/firebase-config.js";
+
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db  = getFirestore(app);
+
+  // ── DOM ───────────────────────────────────────────────────
+  const fileSelect  = document.getElementById("fileSelect");
+  const btnGenerate = document.getElementById("btnGenerate");
+  const btnSaveAll  = document.getElementById("btnSaveAll");
+  const faqGrid     = document.getElementById("faqGrid");
+  const emptyFaqs   = document.getElementById("emptyFaqs");
+  const summaryBar  = document.getElementById("summaryBar");
+  const alertInfo   = document.getElementById("alertInfo");
+  const alertSaved  = document.getElementById("alertSaved");
+  const alertErr    = document.getElementById("alertErr");
+
+  alertInfo.classList.add("show");
+
+  // ── Categorías y palabras clave ───────────────────────────
+  const CATEGORIES = [
+    {
+      id: "precios",
+      label: "Precios y tarifas",
+      icon: "💰",
+      keywords: ["precio","costo","cuesta","valor","tarifa","cobro","pago","descuento","gratis","gratuito","oferta","promocion","promo"],
+      templates: [
+        "¿Cuánto cuesta el servicio de {topic}?",
+        "¿Cuáles son las tarifas disponibles para {topic}?",
+        "¿Existen descuentos o promociones en {topic}?",
+        "¿El servicio de {topic} es gratuito?",
+      ]
+    },
+    {
+      id: "soporte",
+      label: "Soporte técnico",
+      icon: "🔧",
+      keywords: ["problema","error","falla","no funciona","ayuda","soporte","tecnico","arreglar","solucionar","bug","issue","crash"],
+      templates: [
+        "¿Cómo reportar un problema técnico en {topic}?",
+        "¿Qué hago si {topic} no funciona correctamente?",
+        "¿Cómo contactar al soporte técnico de {topic}?",
+        "¿Cuánto tarda en resolverse un error en {topic}?",
+      ]
+    },
+    {
+      id: "horarios",
+      label: "Horarios y disponibilidad",
+      icon: "🕐",
+      keywords: ["horario","hora","cuando","disponible","disponibilidad","abierto","cierre","atencion","dias","semana","fin de semana","24 horas"],
+      templates: [
+        "¿Cuál es el horario de atención de {topic}?",
+        "¿{topic} está disponible los fines de semana?",
+        "¿Hay atención 24 horas para {topic}?",
+        "¿A qué hora cierran el servicio de {topic}?",
+      ]
+    },
+    {
+      id: "cancelaciones",
+      label: "Cancelaciones y devoluciones",
+      icon: "🔄",
+      keywords: ["cancelar","cancelacion","devolucion","reembolso","baja","anular","suspender","regresar","retornar"],
+      templates: [
+        "¿Cómo cancelo mi suscripción a {topic}?",
+        "¿Puedo obtener un reembolso por {topic}?",
+        "¿Cuál es la política de cancelación de {topic}?",
+        "¿Cuánto tiempo tarda la devolución en {topic}?",
+      ]
+    },
+    {
+      id: "configuracion",
+      label: "Configuración y uso",
+      icon: "⚙️",
+      keywords: ["configurar","configuracion","instalar","instalacion","activar","activacion","cuenta","registrar","registro","contrasena","password","usuario"],
+      templates: [
+        "¿Cómo configuro mi cuenta en {topic}?",
+        "¿Cómo instalo o activo {topic}?",
+        "¿Cómo cambio mi contraseña en {topic}?",
+        "¿Cómo registro un nuevo usuario en {topic}?",
+      ]
+    },
+    {
+      id: "atencion",
+      label: "Atención al cliente",
+      icon: "🧑‍💼",
+      keywords: ["asesor","agente","humano","hablar","persona","chat","llamar","telefono","correo","email","contacto","comunicar"],
+      templates: [
+        "¿Cómo hablar con un agente humano en {topic}?",
+        "¿Cuál es el correo o teléfono de contacto de {topic}?",
+        "¿Hay chat en vivo disponible para {topic}?",
+        "¿Cómo escalar mi caso a un asesor en {topic}?",
+      ]
+    },
+  ];
+
+  // ── Tokenizar y contar palabras clave ─────────────────────
+  function analyzeText(text) {
+    const lower   = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    const results = [];
+
+    CATEGORIES.forEach(cat => {
+      let hits = 0;
+      cat.keywords.forEach(kw => {
+        const re = new RegExp(`\\b${kw}\\b`, "gi");
+        const m  = lower.match(re);
+        if (m) hits += m.length;
+      });
+      if (hits > 0) results.push({ cat, hits });
+    });
+
+    // Ordenar por relevancia
+    results.sort((a,b) => b.hits - a.hits);
+    return results;
+  }
+
+  // ── Extraer tema del texto (palabra más frecuente relevante) ─
+  function extractTopic(text) {
+    const stop = new Set(["de","la","el","en","y","a","que","es","se","los","las","un","una","por","con","del","al","para","como","mas","pero","su","o","si","me","te","le","nos","hay","ya","lo","todo","esta","esto","ese","esa","fue","ser","han","has","son","era","ese","muy","bien"]);
+    const words = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .replace(/[^a-z\s]/g, " ").split(/\s+/)
+      .filter(w => w.length > 3 && !stop.has(w));
+
+    const freq = {};
+    words.forEach(w => { freq[w] = (freq[w] || 0) + 1; });
+    const sorted = Object.entries(freq).sort((a,b) => b[1]-a[1]);
+    return sorted.length > 0 ? sorted[0][0] : "Everwood";
+  }
+
+  // ── Generar preguntas ─────────────────────────────────────
+  function generateFAQs(text) {
+    const analysis = analyzeText(text);
+    const topic    = extractTopic(text);
+    const faqs     = [];
+
+    analysis.forEach(({ cat, hits }) => {
+      // Elegir 2-3 plantillas por categoría según relevancia
+      const count = hits > 10 ? 3 : hits > 4 ? 2 : 1;
+      const chosen = cat.templates.slice(0, count);
+      chosen.forEach(tmpl => {
+        faqs.push({
+          question: tmpl.replace("{topic}", topic),
+          category: cat.label,
+          categoryId: cat.id,
+          icon: cat.icon,
+          hits,
+          status: "pending",
+        });
+      });
+    });
+
+    return faqs;
+  }
+
+  // ── Actualizar summary ────────────────────────────────────
+  function updateSummary() {
+    const cards = document.querySelectorAll(".faq-card");
+    let total=0, approved=0, edited=0, rejected=0, pending=0;
+    cards.forEach(c => {
+      total++;
+      const s = c.dataset.status;
+      if (s==="approved") approved++;
+      else if (s==="edited") edited++;
+      else if (s==="rejected") rejected++;
+      else pending++;
+    });
+    document.getElementById("sumTotal").textContent    = total;
+    document.getElementById("sumApproved").textContent = approved;
+    document.getElementById("sumEdited").textContent   = edited;
+    document.getElementById("sumRejected").textContent = rejected;
+    document.getElementById("sumPending").textContent  = pending;
+  }
+
+  // ── Renderizar FAQs ───────────────────────────────────────
+  function renderFAQs(faqs, docId) {
+    faqGrid.innerHTML = "";
+    emptyFaqs.style.display = faqs.length === 0 ? "block" : "none";
+    summaryBar.style.display = faqs.length > 0 ? "flex" : "none";
+    btnSaveAll.style.display = faqs.length > 0 ? "inline-flex" : "none";
+
+    faqs.forEach((faq, i) => {
+      const card = document.createElement("div");
+      card.className   = "faq-card pending";
+      card.dataset.status = "pending";
+      card.dataset.idx    = i;
+      card.innerHTML = `
+        <div class="faq-meta">
+          <span>${faq.icon}</span>
+          <span class="category-chip">${faq.category}</span>
+          <span class="badge badge-neutral" style="font-size:0.68rem;">Pendiente</span>
+          <span class="td-muted" style="font-size:0.72rem;margin-left:auto;">${faq.hits} coincidencias</span>
+        </div>
+        <textarea class="faq-question" rows="2">${faq.question}</textarea>
+        <div class="faq-actions">
+          <button class="btn-approve" data-action="approve">✅ Aprobar</button>
+          <button class="btn-edit"    data-action="edit">✏️ Aprobar editada</button>
+          <button class="btn-reject"  data-action="reject">❌ Rechazar</button>
+        </div>
+      `;
+
+      // Acciones
+      card.querySelectorAll("[data-action]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const action  = btn.dataset.action;
+          const textarea= card.querySelector(".faq-question");
+          card.className   = `faq-card ${action === "approve" ? "approved" : action === "edit" ? "edited" : "rejected"}`;
+          card.dataset.status = action === "approve" ? "approved" : action === "edit" ? "edited" : "rejected";
+          faq.question  = textarea.value.trim();
+          faq.status    = card.dataset.status;
+
+          const badge = card.querySelector(".badge");
+          const labels = { approved:"✅ Aprobada", edited:"✏️ Editada", rejected:"❌ Rechazada" };
+          const classes= { approved:"badge-success", edited:"badge-warn", rejected:"badge-danger" };
+          badge.className = `badge ${classes[faq.status]}`;
+          badge.textContent = labels[faq.status];
+          updateSummary();
+        });
+      });
+
+      faqGrid.appendChild(card);
+    });
+
+    updateSummary();
+    window.__currentFAQs   = faqs;
+    window.__currentDocId  = docId;
+  }
+
+  // ── Cargar archivos disponibles ───────────────────────────
+  async function loadFiles() {
+    try {
+      const q    = query(collection(db,"uploads"), orderBy("uploadDate","desc"));
+      const snap = await getDocs(q);
+      fileSelect.innerHTML = snap.empty
+        ? "<option value=''>— Sin archivos cargados —</option>"
+        : "<option value=''>— Selecciona un archivo —</option>";
+      snap.forEach(d => {
+        const data = d.data();
+        const opt  = document.createElement("option");
+        opt.value       = d.id;
+        opt.textContent = `${data.fileName} · ${data.fileSizeFmt || ""} · ${data.responsible || ""}`;
+        opt.dataset.content = data.fileContent || data.preview || "";
+        fileSelect.appendChild(opt);
+      });
+
+      // Si viene con ?id= preseleccionar
+      const params = new URLSearchParams(window.location.search);
+      const preId  = params.get("id");
+      if (preId) fileSelect.value = preId;
+
+      btnGenerate.disabled = false;
+    } catch(e) {
+      fileSelect.innerHTML = `<option value=''>Error: ${e.message}</option>`;
+    }
+  }
+
+  // ── Generar ───────────────────────────────────────────────
+  btnGenerate.addEventListener("click", () => {
+    alertSaved.classList.remove("show");
+    alertErr.classList.remove("show");
+    const opt = fileSelect.options[fileSelect.selectedIndex];
+    if (!opt || !opt.value) {
+      alertErr.classList.add("show");
+      document.getElementById("alertErrMsg").textContent = "Selecciona un archivo de la lista.";
+      return;
+    }
+    const content = opt.dataset.content || "";
+    if (!content.trim()) {
+      alertErr.classList.add("show");
+      document.getElementById("alertErrMsg").textContent = "El archivo no tiene contenido de texto almacenado.";
+      return;
+    }
+    const faqs = generateFAQs(content);
+    renderFAQs(faqs, opt.value);
+  });
+
+  // ── Guardar aprobadas en Firestore ────────────────────────
+  btnSaveAll.addEventListener("click", async () => {
+    const approved = (window.__currentFAQs || []).filter(f => f.status === "approved" || f.status === "edited");
+    if (approved.length === 0) {
+      alertErr.classList.add("show");
+      document.getElementById("alertErrMsg").textContent = "No hay FAQs aprobadas o editadas para guardar.";
+      return;
+    }
+    alertErr.classList.remove("show");
+    btnSaveAll.disabled = true;
+    btnSaveAll.innerHTML = `<span class="spinner"></span> Guardando…`;
+    try {
+      for (const faq of approved) {
+        await addDoc(collection(db,"faqs"), {
+          question:   faq.question,
+          category:   faq.category,
+          categoryId: faq.categoryId,
+          status:     faq.status,
+          sourceDocId:window.__currentDocId || null,
+          createdAt:  serverTimestamp(),
+        });
+      }
+      alertSaved.classList.add("show");
+      document.getElementById("alertSavedMsg").textContent =
+        `${approved.length} FAQ${approved.length>1?"s":""} guardada${approved.length>1?"s":""} en Firestore correctamente.`;
+    } catch(e) {
+      alertErr.classList.add("show");
+      document.getElementById("alertErrMsg").textContent = `Error al guardar: ${e.message}`;
+    }
+    btnSaveAll.disabled = false;
+    btnSaveAll.innerHTML = "💾 Guardar aprobadas en Firestore";
+  });
+
+  loadFiles();
+</script>
+</body>
+</html>

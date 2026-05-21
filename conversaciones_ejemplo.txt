@@ -1,0 +1,29 @@
+[21/05/2026 09:15:22] Cliente: Hola, quisiera saber el precio de la suscripción mensual de Everwood. ¿Tienen algún descuento disponible actualmente?
+[21/05/2026 09:16:05] Everwood Bot: Hola! El costo de la suscripción estándar es de $15 USD al mes. Si compras el plan anual, tienes un descuento del 20%. ¿Te interesa contratarlo?
+[21/05/2026 09:17:40] Cliente: De acuerdo, gracias. ¿Y el servicio es gratis los primeros días para probar?
+[21/05/2026 09:18:10] Everwood Bot: Sí, tenemos una prueba gratuita de 7 días sin costo adicional.
+
+[21/05/2026 10:30:15] Cliente: Hola, tengo un problema. El sistema no funciona y me sale un error de conexión al abrir Everwood. ¿Me pueden dar soporte?
+[21/05/2026 10:31:00] Everwood Bot: Lamento escuchar eso. Por favor, asegúrate de estar conectado a Internet. Si la falla persiste, puedes reportar el bug escribiendo a soporte@everwood.com.
+[21/05/2026 10:32:12] Cliente: Sigue sin funcionar, sale "Error 500". Necesito ayuda urgente para arreglar esto.
+[21/05/2026 10:33:00] Everwood Bot: Entendido. He registrado tu reporte de soporte técnico. Nuestro equipo buscará la solución al problema a la brevedad.
+
+[21/05/2026 11:45:00] Cliente: Hola, ¿cuál es el horario de atención de las oficinas de Everwood? ¿Están abiertos los fines de semana?
+[21/05/2026 11:45:30] Everwood Bot: Hola! Nuestro horario de atención al cliente es de lunes a viernes de 8:00 AM a 6:00 PM. Los sábados y domingos no tenemos atención en oficinas, pero el sistema está disponible 24 horas en la web.
+[21/05/2026 11:46:15] Cliente: Perfecto. ¿A qué hora cierran los canales de soporte los viernes?
+[21/05/2026 11:46:40] Everwood Bot: Los viernes la atención cierra a las 5:30 PM.
+
+[21/05/2026 14:10:10] Cliente: Buenas tardes, deseo cancelar mi suscripción a Everwood. ¿Cómo puedo darme de baja?
+[21/05/2026 14:11:00] Everwood Bot: Hola! Para cancelar tu suscripción, ve a Configuración de Cuenta y haz clic en "Cancelar Suscripción". ¿Hay algún motivo por el cual te das de baja?
+[21/05/2026 14:12:30] Cliente: Es que ya no lo necesito. ¿Tienen opción de reembolso o devolución del último pago?
+[21/05/2026 14:13:00] Everwood Bot: Nuestra política permite solicitar un reembolso completo si estás dentro de los primeros 14 días desde el pago inicial.
+
+[21/05/2026 15:20:05] Cliente: Hola, ¿cómo hago para configurar mi cuenta por primera vez? No sé cómo instalar la aplicación de Everwood.
+[21/05/2026 15:21:00] Everwood Bot: Hola! El proceso de configuración es sencillo. Descarga el instalador desde nuestro sitio oficial, ejecútalo y regístrate con tu correo y contraseña.
+[21/05/2026 15:22:20] Cliente: Ya me registré, pero olvidé mi contraseña. ¿Cómo la puedo cambiar?
+[21/05/2026 15:23:00] Everwood Bot: Ve a la pantalla de inicio de sesión y selecciona "¿Olvidaste tu contraseña?". Se te enviará un enlace de activación para restablecerla.
+
+[21/05/2026 16:40:11] Cliente: Hola, el chatbot no me entiende. ¿Puedo hablar con un asesor o una persona real en este chat?
+[21/05/2026 16:41:00] Everwood Bot: Sí, te puedo comunicar con un agente humano. Por favor espera en línea mientras busco un asesor disponible.
+[21/05/2026 16:42:15] Cliente: Gracias, prefiero hablar con un humano. ¿Hay algún número de teléfono para llamar?
+[21/05/2026 16:43:00] Everwood Bot: Puedes llamarnos al +1 800 EVERWOOD de lunes a viernes o enviarnos un correo de contacto.

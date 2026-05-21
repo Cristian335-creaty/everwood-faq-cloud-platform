@@ -17,9 +17,10 @@
       <span>Everwood <em>FAQ Cloud</em></span>
     </a>
     <nav class="navbar-nav">
-      <a href="index.html"   class="nav-link"         id="nav-home">Inicio</a>
-      <a href="upload.html"  class="nav-link active"   id="nav-upload">Cargar</a>
-      <a href="history.html" class="nav-link"          id="nav-history">Historial</a>
+      <a href="index.html"   class="nav-link">Inicio</a>
+      <a href="upload.html"  class="nav-link active">Cargar</a>
+      <a href="history.html" class="nav-link">Historial</a>
+      <a href="faqs.html"    class="nav-link">FAQs</a>
     </nav>
   </nav>
 
@@ -211,6 +212,50 @@
     return name.split(".").pop().toLowerCase();
   }
 
+  // ── Lógica de Análisis para Métricas (Dashboard) ───────────
+  const KEYWORD_GROUPS = [
+    ["precio","costo","cuesta","valor","tarifa","cobro","pago","descuento","gratis","gratuito","oferta","promocion","promo"],
+    ["problema","error","falla","no funciona","ayuda","soporte","tecnico","arreglar","solucionar","bug","issue","crash"],
+    ["horario","hora","cuando","disponible","disponibilidad","abierto","cierre","atencion","dias","semana","fin de semana","24 horas"],
+    ["cancelar","cancelacion","devolucion","reembolso","baja","anular","suspender","regresar","retornar"],
+    ["configurar","configuracion","instalar","instalacion","activar","activacion","cuenta","registrar","registro","contrasena","password","usuario"],
+    ["asesor","agente","humano","hablar","persona","chat","llamar","telefono","correo","email","contacto","comunicar"]
+  ];
+
+  function countConversations(text, ext) {
+    if (!text || !text.trim()) return 0;
+    if (ext === "json") {
+      try {
+        const obj = JSON.parse(text);
+        if (Array.isArray(obj)) return obj.length;
+        if (obj.conversations && Array.isArray(obj.conversations)) return obj.conversations.length;
+        if (obj.messages && Array.isArray(obj.messages)) return obj.messages.length;
+      } catch (e) {
+        // Fallback al conteo de líneas
+      }
+    }
+    // Conteo de líneas no vacías para TXT y CSV
+    return text.split("\n").filter(line => line.trim().length > 0).length;
+  }
+
+  function countSuggestedFaqs(text) {
+    if (!text) return 0;
+    const lower = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    let count = 0;
+    KEYWORD_GROUPS.forEach(keywords => {
+      let hits = 0;
+      keywords.forEach(kw => {
+        const re = new RegExp(`\\b${kw}\\b`, "gi");
+        const m  = lower.match(re);
+        if (m) hits += m.length;
+      });
+      if (hits > 0) {
+        count += hits > 10 ? 3 : hits > 4 ? 2 : 1;
+      }
+    });
+    return count;
+  }
+
   // ── Validación del archivo ────────────────────────────────
   function validateFile(file) {
     const ext = getExt(file.name);
@@ -338,7 +383,11 @@
 
       const ext = getExt(file.name);
 
-      // 7. Guardar en Firestore (todo en texto — sin Firebase Storage)
+      // 7. Calcular métricas en cliente
+      const conversationsCount = countConversations(fileContent, ext);
+      const suggestedFaqsCount = countSuggestedFaqs(fileContent);
+
+      // 8. Guardar en Firestore (todo en texto — sin Firebase Storage)
       await addDoc(collection(db, "uploads"), {
         fileName:     file.name,
         uploadDate:   serverTimestamp(),
@@ -352,6 +401,8 @@
         preview:      preview,         // vista previa del contenido
         fileContent:  fileContent,     // contenido completo para descarga
         storageType:  "firestore",     // indica que NO usa Storage
+        conversationsCount: conversationsCount,
+        suggestedFaqsCount: suggestedFaqsCount
       });
 
       await animateProgress(65, 100, 400);

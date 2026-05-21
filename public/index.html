@@ -17,9 +17,10 @@
       <span>Everwood <em>FAQ Cloud</em></span>
     </a>
     <nav class="navbar-nav">
-      <a href="index.html"   class="nav-link active" id="nav-home">Inicio</a>
-      <a href="upload.html"  class="nav-link"        id="nav-upload">Cargar</a>
-      <a href="history.html" class="nav-link"        id="nav-history">Historial</a>
+      <a href="index.html"   class="nav-link active">Inicio</a>
+      <a href="upload.html"  class="nav-link">Cargar</a>
+      <a href="history.html" class="nav-link">Historial</a>
+      <a href="faqs.html"    class="nav-link">FAQs</a>
     </nav>
   </nav>
 
@@ -49,33 +50,187 @@
         </a>
       </div>
 
+      <!-- Dashboard Section -->
+      <div class="dashboard-section" style="margin-top: 3.5rem; text-align: left; animation: slideDown 0.4s ease both;">
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem; letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #fff 60%, var(--clr-primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+          📊 Dashboard de Métricas Cloud
+        </h2>
+        <div class="stats-grid" id="dashboardGrid" style="margin-bottom: 1rem;">
+          <div class="stat-card">
+            <span class="stat-label">Archivos Cargados</span>
+            <span class="stat-value blue" id="dashFiles">—</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Mensajes / Líneas</span>
+            <span class="stat-value green" id="dashConversations">—</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">FAQs Sugeridas</span>
+            <span class="stat-value warn" id="dashSuggested">—</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">FAQs Aprobadas</span>
+            <span class="stat-value red" id="dashApproved">—</span>
+          </div>
+        </div>
+        <p style="font-size:0.75rem; color: var(--clr-muted); margin-bottom: 2.5rem; margin-top: -0.5rem;">
+          * Métricas calculadas en tiempo real a partir de Firestore.
+        </p>
+      </div>
+
       <!-- Feature cards -->
       <div class="features-grid">
-        <div class="feature-card">
+        <a href="upload.html" class="feature-card">
           <span class="feature-icon">📂</span>
           <h3>Carga de archivos</h3>
-          <p>Soporta CSV, JSON y TXT. Validación automática de formato y peso antes de subir.</p>
-        </div>
-        <div class="feature-card">
+          <p>Soporta CSV, JSON y TXT. Validación automática de formato, tamaño y tipo antes de subir.</p>
+        </a>
+        <a href="upload.html" class="feature-card">
           <span class="feature-icon">☁️</span>
           <h3>Almacenamiento cloud</h3>
-          <p>Archivos guardados en Firebase Storage con URL de descarga segura y permanente.</p>
-        </div>
-        <div class="feature-card">
+          <p>Archivos y metadatos guardados en Firestore (plan Spark gratuito). Sin costo adicional.</p>
+        </a>
+        <a href="history.html" class="feature-card">
           <span class="feature-icon">🗄️</span>
           <h3>Registro de metadatos</h3>
           <p>Cada carga registra nombre, fecha, tipo, tamaño, responsable, estado y observaciones.</p>
-        </div>
-        <div class="feature-card">
+        </a>
+        <a href="history.html" class="feature-card">
           <span class="feature-icon">📊</span>
-          <h3>Historial completo</h3>
-          <p>Consulta todos los archivos cargados con sus estados y accede a los archivos originales.</p>
-        </div>
+          <h3>Historial y detalle</h3>
+          <p>Consulta todos los archivos, ve el detalle de cada carga y descarga el contenido original.</p>
+        </a>
+        <a href="faqs.html" class="feature-card">
+          <span class="feature-icon">🤖</span>
+          <h3>Generador de FAQs</h3>
+          <p>Algoritmo de análisis de palabras clave que sugiere preguntas frecuentes por categoría.</p>
+        </a>
+        <a href="faqs.html" class="feature-card">
+          <span class="feature-icon">✅</span>
+          <h3>Validación humana</h3>
+          <p>Aprueba, edita o rechaza cada FAQ sugerida. Las aprobadas se guardan en Firestore.</p>
+        </a>
       </div>
 
     </div>
   </section>
 
 </div>
+
+<!-- Firebase SDK y Lógica del Dashboard -->
+<script type="module">
+  import { initializeApp }                          from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+  import { getFirestore, collection, getDocs }      from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+  import { FIREBASE_CONFIG }                        from "./js/firebase-config.js";
+
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db  = getFirestore(app);
+
+  // ── Elementos DOM ──────────────────────────────────────────
+  const dashFiles         = document.getElementById("dashFiles");
+  const dashConversations = document.getElementById("dashConversations");
+  const dashSuggested     = document.getElementById("dashSuggested");
+  const dashApproved      = document.getElementById("dashApproved");
+
+  // ── Algoritmo simple para contar FAQs estimadas si falta metadato ──
+  // (De respaldo para archivos antiguos sin metadato)
+  const KEYWORD_GROUPS = [
+    ["precio","costo","cuesta","valor","tarifa","cobro","pago","descuento","gratis","gratuito","oferta","promocion","promo"],
+    ["problema","error","falla","no funciona","ayuda","soporte","tecnico","arreglar","solucionar","bug","issue","crash"],
+    ["horario","hora","cuando","disponible","disponibilidad","abierto","cierre","atencion","dias","semana","fin de semana","24 horas"],
+    ["cancelar","cancelacion","devolucion","reembolso","baja","anular","suspender","regresar","retornar"],
+    ["configurar","configuracion","instalar","instalacion","activar","activacion","cuenta","registrar","registro","contrasena","password","usuario"],
+    ["asesor","agente","humano","hablar","persona","chat","llamar","telefono","correo","email","contacto","comunicar"]
+  ];
+
+  function estimateSuggestedFaqs(text) {
+    if (!text) return 0;
+    const lower = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    let totalFaqs = 0;
+    KEYWORD_GROUPS.forEach(keywords => {
+      let hits = 0;
+      keywords.forEach(kw => {
+        const re = new RegExp(`\\b${kw}\\b`, "gi");
+        const m  = lower.match(re);
+        if (m) hits += m.length;
+      });
+      if (hits > 0) {
+        totalFaqs += hits > 10 ? 3 : hits > 4 ? 2 : 1;
+      }
+    });
+    return totalFaqs;
+  }
+
+  async function loadDashboard() {
+    try {
+      // 1. Obtener cargas de uploads
+      const uploadsSnap = await getDocs(collection(db, "uploads"));
+      let totalFiles = uploadsSnap.size;
+      let totalConversations = 0;
+      let totalSuggested = 0;
+
+      uploadsSnap.forEach(docSnap => {
+        const d = docSnap.data();
+        
+        // Sumar conversaciones (mensajes o líneas)
+        if (d.conversationsCount !== undefined) {
+          totalConversations += d.conversationsCount;
+        } else {
+          // Estimación por líneas de texto si es un archivo heredado sin este metadato
+          const text = d.fileContent || d.preview || "";
+          const lines = text.split("\n").filter(l => l.trim().length > 0).length;
+          totalConversations += lines;
+        }
+
+        // Sumar sugeridas
+        if (d.suggestedFaqsCount !== undefined) {
+          totalSuggested += d.suggestedFaqsCount;
+        } else {
+          // Estimación del algoritmo
+          const text = d.fileContent || d.preview || "";
+          totalSuggested += estimateSuggestedFaqs(text);
+        }
+      });
+
+      // 2. Obtener FAQs aprobadas
+      const faqsSnap = await getDocs(collection(db, "faqs"));
+      let totalApproved = faqsSnap.size;
+
+      // 3. Renderizar en la UI con animación rápida de conteo
+      animateCounter(dashFiles, totalFiles);
+      animateCounter(dashConversations, totalConversations);
+      animateCounter(dashSuggested, totalSuggested);
+      animateCounter(dashApproved, totalApproved);
+
+    } catch (e) {
+      console.error("Error al cargar dashboard:", e);
+      dashFiles.textContent         = "0";
+      dashConversations.textContent = "0";
+      dashSuggested.textContent     = "0";
+      dashApproved.textContent      = "0";
+    }
+  }
+
+  // Utilidad de animación de números
+  function animateCounter(el, target) {
+    if (target === 0) {
+      el.textContent = "0";
+      return;
+    }
+    let current = 0;
+    const increment = Math.ceil(target / 30) || 1;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        el.textContent = target.toLocaleString("es-CO");
+        clearInterval(timer);
+      } else {
+        el.textContent = current.toLocaleString("es-CO");
+      }
+    }, 25);
+  }
+
+  loadDashboard();
+</script>
 </body>
 </html>
