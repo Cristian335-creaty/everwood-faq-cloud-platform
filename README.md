@@ -126,15 +126,14 @@ firebase deploy --only hosting
 
 ---
 
-## 🔐 Reglas de Firestore (modo prueba)
+## 🔒 Seguridad y reglas de Firestore
 
+Este proyecto usaba inicialmente las reglas de Firestore en modo prueba (`allow read, write: if true`), lo que dejaba la base de datos completamente abierta a lectura y escritura publica. Esa configuracion ya fue corregida a nivel de codigo: el archivo `firestore.rules` en la raiz del repositorio define reglas mas seguras, que permiten lectura publica (necesaria para mostrar historial y FAQs) pero bloquean la modificacion o borrado de documentos ya existentes por parte de terceros.
+
+Para que la correccion tenga efecto en el proyecto real hace falta desplegar las reglas con el CLI de Firebase, ya autenticado con la cuenta del propietario del proyecto:
+
+```powershell
+firebase deploy --only firestore:rules
 ```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
-```
+
+Nota sobre la API key de Firebase en `public/js/firebase-config.js`: en las apps web de Firebase esa clave es un identificador publico del proyecto (no es un secreto de servidor), por lo que su presencia en el codigo fuente es esperada por diseno. La proteccion real se logra restringiendo esa clave por dominio/HTTP referrer en Google Cloud Console (APIs y servicios > Credenciales) y con las reglas de seguridad de Firestore/Storage, que es justamente lo que este archivo `firestore.rules` corrige.
