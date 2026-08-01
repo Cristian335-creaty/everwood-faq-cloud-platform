@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+    match /databases/{database}/documents {
+
+          match /uploads/{docId} {
+                  allow read: if true;
+                  allow create: if request.resource.data.keys().hasAll(['fileName', 'uploadDate', 'fileType', 'fileExt', 'fileSize', 'status'])
+                                && request.resource.data.fileSize is number
+                                && request.resource.data.fileSize < 5000000;
+                  allow update, delete: if false;
+                }
+
+          match /faqs/{docId} {
+                  allow read: if true;
+                  allow create, update: if true;
+                  allow delete: if false;
+                }
+        }
+  }
